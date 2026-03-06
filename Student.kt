@@ -9,29 +9,28 @@ data class Student(
     val score2: Double
 )
 
-// 2. Classe Abstraite pour la logique de calcul
+// 2. Classe Abstraite
 abstract class GradeProcessor {
 
-    // Méthode concrète pour calculer la moyenne
     fun calculateAverage(s1: Double, s2: Double): Double {
         return (s1 + s2) / 2
     }
 
-    // Méthode abstraite que la sous-classe doit implémenter
     abstract fun getGrade(average: Double): String
 
-    // Méthode "Template" qui orchestre le processus (Logique imposée)
     fun process(student: Student): String {
         if (student.score1 !in 0.0..100.0 || student.score2 !in 0.0..100.0) {
             return "Invalide"
         }
+
         val average = calculateAverage(student.score1, student.score2)
         return getGrade(average)
     }
 }
 
-// 3. Implémentation concrète
+// 3. Implémentation
 class StudentGradeCalculator : GradeProcessor() {
+
     override fun getGrade(average: Double): String {
         return when {
             average >= 80 -> "A"
@@ -44,9 +43,11 @@ class StudentGradeCalculator : GradeProcessor() {
     }
 }
 
-// 4. Fonction Export CSV
+// 4. Export CSV
 fun exportToCSV(results: List<Map<String, String>>) {
+
     val file = File("students_results.csv")
+
     val header = "STUDENT,COURSE,AVG,GRADE\n"
 
     val content = results.joinToString("\n") { res ->
@@ -54,11 +55,13 @@ fun exportToCSV(results: List<Map<String, String>>) {
     }
 
     file.writeText(header + content)
+
     println("\nFichier CSV généré : ${file.absolutePath}")
 }
 
-// 5. Main Function
+// 5. MAIN
 fun main() {
+
     val reader = Scanner(System.`in`)
     val calculator = StudentGradeCalculator()
     val students = mutableListOf<Student>()
@@ -67,6 +70,7 @@ fun main() {
     val number = reader.nextLine().toIntOrNull() ?: 0
 
     for (i in 1..number) {
+
         println("\n--- Étudiant $i ---")
 
         print("Nom : ")
@@ -75,7 +79,7 @@ fun main() {
         print("Cours : ")
         val course = reader.nextLine().ifBlank { "N/A" }
 
-        print("CA  : ")
+        print("CA : ")
         val s1 = reader.nextLine().replace(',', '.').toDoubleOrNull() ?: 0.0
 
         print("Final exam : ")
@@ -84,8 +88,22 @@ fun main() {
         students.add(Student(name, course, s1, s2))
     }
 
-    // Traitement des résultats via la classe abstraite
-    val resultList = students.map { st ->
+    // 🔴 Afficher les étudiants invalides
+    println("\nÉtudiants avec notes invalides :")
+
+    students.forEach {
+        if (it.score1 !in 0.0..100.0 || it.score2 !in 0.0..100.0) {
+            println("${it.name} -> Invalide")
+        }
+    }
+
+    // ✅ FILTER : supprimer les notes invalides
+    val validStudents = students.filter {
+        it.score1 in 0.0..100.0 && it.score2 in 0.0..100.0
+    }
+
+    // MAP pour générer les résultats
+    val resultList = validStudents.map { st ->
         mapOf(
             "name" to st.name,
             "course" to st.course,
@@ -94,7 +112,7 @@ fun main() {
         )
     }
 
-    // Affichage Console
+    // Affichage
     println("\n========== TABLEAU DES RÉSULTATS ==========")
     println("%-15s %-15s %-8s %-5s".format("NOM", "COURS", "MOY", "GRADE"))
     println("-".repeat(50))
